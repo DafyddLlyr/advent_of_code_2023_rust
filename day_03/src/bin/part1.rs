@@ -7,33 +7,29 @@ fn main() {
 }   
 
 fn part1(input: &str) -> i32 {
-    // read lines
-    // iterate over lines
     let input_lines: Vec<&str> = input.lines().collect();
+    let symbol_re = Regex::new(r"[^0-9.]").unwrap();
+    let number_re = Regex::new(r"[0-9]+").unwrap();
+
     let mut parts: Vec<i32> = Vec::new();
 
     for (line_index, line) in input_lines.iter().enumerate() {
-        let symbol_re = Regex::new(r"[^0-9.]").unwrap();
         let symbols = symbol_re.find_iter(line);
+        let is_first_line = line_index > 0;
+        let is_final_line = line_index < input_lines.len() - 1;
 
-        // if symbol is found, stop!
         for symbol in symbols.into_iter() {
-            // look "around" symbol
             let symbol_index = symbol.start();
-            let number_re = Regex::new(r"[0-9]+").unwrap();
-
-            //  - line above +- index
-            if line_index > 0 {
+ 
+            if !is_first_line {
                 let line_above = number_re.find_iter(input_lines[line_index - 1]);
                 check_line_above(line_above, symbol_index, &mut parts);
             }
             
-            //  - current line +- index
             let current_line = number_re.find_iter(input_lines[line_index]);
             check_current_line(current_line, symbol_index, &mut parts);
 
-            //  - line below +- index
-            if line_index < input_lines.len() - 1 {
+            if !is_final_line {
                 let line_below = number_re.find_iter(input_lines[line_index + 1]);
                 check_line_below(line_below, symbol_index, &mut parts);
             }
