@@ -1,6 +1,6 @@
-use core::panic;
-use std::collections::HashMap;
+use std::{collections::HashMap, cmp::Ordering};
 
+#[derive(Eq, Ord, PartialEq, PartialOrd)]
 enum HandType {
     FiveOfAKind = 7,
     FourOfAKind = 6,
@@ -11,7 +11,7 @@ enum HandType {
     HighCard = 1,
 }
 
-#[derive(Eq, PartialEq, Hash, Debug)]
+#[derive(Eq, PartialEq, Hash, Debug, PartialOrd, Ord)]
 enum Card {
     A = 14, 
     K = 13, 
@@ -40,13 +40,35 @@ fn main() {
     println!("The answer for part 1 is: {}", output);
 }   
 
-fn part1(input: &str) -> i32 {
-    let hands: Hands = parse_input(input);
-    // Sort by score
-    // Grant a rank
-    // Multiply rank by bid
-    // Sum total winnings
-    6440
+fn part1(input: &str) -> usize {
+    let mut hands: Hands = parse_input(input);
+    hands.sort_by(|(cards_a, _, hand_type_a), (cards_b, _, hand_type_b) | {
+        match hand_type_a.cmp(hand_type_b) {
+            Ordering::Less => Ordering::Less,
+            Ordering::Greater => Ordering::Greater,
+            Ordering::Equal => compare_cards(cards_a, cards_b),
+        }
+    });
+    let score: usize = hands
+        .iter()
+        .enumerate()
+        // Multiply rank by bid
+        .map(|(i, (_, bid, _))| (i + 1) * *bid as usize)
+        .sum();
+    
+    score
+}
+
+fn compare_cards(a: &Vec<Card>, b: &Vec<Card>) -> Ordering {
+    for (card_a, card_b) in a.iter().zip(b.iter()) {
+        match card_a.cmp(card_b) {
+            Ordering::Less => return Ordering::Less,
+            Ordering::Greater => return Ordering::Greater,
+            Ordering::Equal => continue,
+        }
+    }
+    
+    Ordering::Equal
 }
 
 fn parse_input(input: &str) -> Hands {
