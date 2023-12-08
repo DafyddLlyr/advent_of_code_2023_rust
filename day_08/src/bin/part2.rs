@@ -22,7 +22,7 @@ fn main() {
     println!("The answer for part 1 is: {}", output);
 }   
 
-fn part1(input: &str) -> i32 {
+fn part1(input: &str) -> usize {
     let (path, graph) = parse_input(input);
     let step_count = simultaneously_traverse_graph(path, graph);
     step_count
@@ -58,34 +58,54 @@ fn parse_input(input: &str) -> (Path, Graph) {
     (path, graph)
 }
 
-fn simultaneously_traverse_graph(path: Path, graph: Graph) -> i32 {
+fn traverse_graph(origin: &str, path: &Path, graph: &Graph) -> usize {
     let mut step_count = 0;
-    let origins: Vec<_> = graph.keys().filter(|key| key.ends_with("A")).collect();
-    let count_origins = origins.len().clone();
+    let mut reached_destination = false;
+    let mut current_node = graph.get(origin).expect("Unable to find node");
 
-    let mut current_nodes = origins.clone();
-
-    'traverse: loop {
+    while !reached_destination {
         for step in path.iter() {
-            let mut count_destinations_reached = 0;
+            if current_node.id.ends_with("Z") { 
+                reached_destination = true; 
+                break;
+            };
             
-            for (i, &id) in current_nodes.clone().iter().enumerate() {
-                let current_node = graph.get(id).expect("Unable to find node");
-                if id.ends_with("Z") { 
-                    count_destinations_reached += 1;
-                    if count_destinations_reached == count_origins { break 'traverse }
-                };
-                current_nodes[i] = match step {
-                    Direction::L => &graph.get(&current_node.left).expect("Unable to find node").id,
-                    Direction::R => &graph.get(&current_node.right).expect("Unable to find node").id,
-                };
-            }
-
             step_count += 1;
-        };
-    };
-    
+            current_node = match step {
+                Direction::L => graph.get(&current_node.left).expect("Unable to find node"),
+                Direction::R => graph.get(&current_node.right).expect("Unable to find node"),
+            };
+        }
+    }
+
     step_count
+}
+
+fn simultaneously_traverse_graph(path: Path, graph: Graph) -> usize {
+    let origins: Vec<_> = graph.keys().filter(|key| key.ends_with("A")).collect();
+    let step_counts: Vec<usize> = origins.iter().map(|origin| traverse_graph(origin, &path, &graph)).collect();
+
+    let step_count = least_common_multiple(step_counts);
+
+    step_count
+}
+
+// From https://github.com/TheAlgorithms/Rust
+fn least_common_multiple(nums: Vec<usize>) -> usize {
+    if nums.len() == 1 { 
+        return nums[0]; 
+    };
+    let a = nums[0];
+    let b = least_common_multiple(nums[1..].to_vec());
+    a * b / greatest_common_divisor(a, b)
+}
+
+// From https://github.com/TheAlgorithms/Rust
+fn greatest_common_divisor(a: usize, b: usize) -> usize {
+    if b == 0 {
+        return a;
+    }
+    greatest_common_divisor(b, a % b)
 }
 
 #[cfg(test)]
