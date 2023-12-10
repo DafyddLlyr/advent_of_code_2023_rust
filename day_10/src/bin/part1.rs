@@ -72,17 +72,16 @@ impl Maze {
         let (start_row, start_col) = self.start;
         let mut possible_directions: Vec<Coord> = Vec::new();
         
-        match self.start {
-            (start_row, _) if start_row >= 1 => {
-                possible_directions.push((start_row - 1, start_col)); // Up
-                possible_directions.push((start_row, start_col + 1)); // Right
-            },
-            (_, start_col) if start_col >= 1 => {
-                possible_directions.push((start_row, start_col - 1)); // Left
-                possible_directions.push((start_row + 1, start_col)); // Down
-            },
-            _ => unreachable!()
-        }
+        // Avoid maze "walls"
+        // Don't start in impossible direction
+        if start_row >= 1 {
+            possible_directions.push((start_row - 1, start_col)); // Up
+            possible_directions.push((start_row, start_col + 1)); // Right
+        };
+        if start_col >= 1 {
+            possible_directions.push((start_row, start_col - 1)); // Left
+            possible_directions.push((start_row + 1, start_col)); // Down
+        };
 
         for direction in possible_directions {
             match self.get(direction) {
@@ -110,7 +109,7 @@ impl Maze {
         
         let (prev_row, prev_col) = self.prev;
         let (current_row, current_col) = self.current;
-    
+
         let next = match current_tile {
             Tile::NorthSouth => match prev_row {
                 north if north == (current_row - 1) => self.step_south(),
@@ -192,9 +191,9 @@ fn part1(input: &str) -> i32 {
         step_count += 1;
     }
 
-    let farthers_point = step_count / 2;
+    let farthest_point = step_count / 2;
 
-    farthers_point
+    farthest_point
 }
 
 #[cfg(test)]
